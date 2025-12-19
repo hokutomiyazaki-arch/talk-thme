@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="FNT Neuro Card - トークテーマ・ルーレット">
+    
+    <title>FNT Neuro Card</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="FNT512.png">
+    <link rel="icon" type="image/png" href="FNT512.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'orbitron': ['Orbitron', 'sans-serif'],
+                        'rajdhani': ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        'cyber-blue': '#00D4FF',
+                        'cyber-blue-dark': '#0099CC',
+                        'neuro-purple': '#8B5CF6',
+                        'void': '#000000',
+                        'deep-navy': '#0A0A1A',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            touch-action: none;
+            background: #000000;
+        }
+        
+        #root {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        /* Scrollable panels */
+        .scrollable-panel {
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto !important;
+        }
+        
+        .scrollable-panel * {
+            touch-action: auto !important;
+        }
+        
+        /* Cyber glow effects */
+        .glow-blue {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5),
+                        0 0 40px rgba(0, 212, 255, 0.3),
+                        0 0 60px rgba(0, 212, 255, 0.1);
+        }
+        
+        .glow-text-blue {
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.8),
+                         0 0 20px rgba(0, 212, 255, 0.5),
+                         0 0 30px rgba(0, 212, 255, 0.3);
+        }
+        
+        .glow-text-white {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+                         0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Card styles */
+        .card-container {
+            perspective: 1000px;
+        }
+        
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        
+        .card-back {
+            transform: rotateY(0deg);
+        }
+        
+        .card-front {
+            transform: rotateY(180deg);
+        }
+        
+        /* Circuit pattern */
+        .circuit-pattern {
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Scanline effect */
+        .scanline {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.4), transparent);
+            animation: scanline 3s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { top: -2px; }
+            100% { top: 100%; }
+        }
+        
+        /* Glitch effect */
+        @keyframes glitch {
+            0%, 90%, 100% { 
+                transform: translate(0);
+                opacity: 1;
+            }
+            91% { 
+                transform: translate(-2px, 1px);
+                opacity: 0.8;
+            }
+            92% { 
+                transform: translate(2px, -1px);
+                opacity: 0.9;
+            }
+            93% { 
+                transform: translate(-1px, 2px);
+                opacity: 0.7;
+            }
+            94% { 
+                transform: translate(1px, -2px);
+                opacity: 1;
+            }
+        }
+        
+        .glitch-effect {
+            animation: glitch 4s infinite;
+        }
+        
+        /* Noise overlay */
+        .noise-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+        
+        /* Pulse animation */
+        @keyframes pulse-glow {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(0, 212, 255, 0.5),
+                            0 0 40px rgba(0, 212, 255, 0.3);
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(0, 212, 255, 0.7),
+                            0 0 60px rgba(0, 212, 255, 0.5);
+            }
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        /* Safe area padding */
+        .safe-area-top {
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+        
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        
+        /* Hexagon pattern */
+        .hex-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300D4FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        /* Category badge colors */
+        .badge-neuro-geek {
+            background: linear-gradient(135deg, #00D4FF 0%, #0099CC 100%);
+        }
+        
+        .badge-life-shift {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+        
+        .badge-vision-2026 {
+            background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        }
+        
+        .badge-ice-break {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { motion, AnimatePresence } = Motion;
+        
+        // トークテーマデータ
+        const themes = [
+            { category: "Neuro Geek", text: "今年、一番『神』だと思ったドリル" },
+            { category: "Neuro Geek", text: "『神経科学を知っててよかった…』と冷や汗をかいた瞬間" },
+            { category: "Neuro Geek", text: "今年出会った『一番印象的な脳みそ（クライアント）』" },
+            { category: "Neuro Geek", text: "実はこっそりサボっている（効率化している）臨床のプロセス" },
+            { category: "Neuro Geek", text: "2025年、私の『脳内マップ』が書き換わった瞬間（Aha!体験）" },
+            { category: "Life Shift", text: "今年、生活の中で『一番変わったこと』" },
+            { category: "Life Shift", text: "実は私、今年これに『ドハマり』してました（神経以外）" },
+            { category: "Life Shift", text: "私の『最強のリカバリー（回復）』方法はこれだ！" },
+            { category: "Life Shift", text: "今年買ってよかった『ベストバイ』アイテム" },
+            { category: "Life Shift", text: "2025年を漢字一文字（または単語）で表すと？" },
+            { category: "Vision 2026", text: "来年こそは！と密かに企んでいる『新しいチャレンジ』" },
+            { category: "Vision 2026", text: "もしFNTコミュニティで『部活動』を作るなら何部？" },
+            { category: "Vision 2026", text: "来年、みんなで『こんな場所』に行ってみたい！" },
+            { category: "Vision 2026", text: "宮崎ほくと（またはFNT）に『これだけはやってほしい』リクエスト" },
+            { category: "Vision 2026", text: "2026年の年末、自分はどうなっていたい？" },
+            { category: "Ice Break", text: "正直、今年『三日坊主』で終わってしまったこと" },
+            { category: "Ice Break", text: "今年一番の『やらかし（失敗）』エピソード" },
+            { category: "Ice Break", text: "実はみんなに『言っていなかったこと（秘密）』" },
+            { category: "Ice Break", text: "ここだけの話、FNTに入って『ここが変だよ』と思ったこと" },
+            { category: "Ice Break", text: "今だから言える『あの時、実はテンパってました』" }
+        ];
+        
+        // カテゴリーバッジのスタイル
+        const getCategoryStyle = (category) => {
+            switch(category) {
+                case "Neuro Geek": return "badge-neuro-geek";
+                case "Life Shift": return "badge-life-shift";
+                case "Vision 2026": return "badge-vision-2026";
+                case "Ice Break": return "badge-ice-break";
+                default: return "badge-neuro-geek";
+            }
+        };
+        
+        // スプラッシュスクリーン
+        const SplashScreen = ({ onComplete }) => {
+            useEffect(() => {
+                const timer = setTimeout(onComplete, 2500);
+                return () => clearTimeout(timer);
+            }, [onComplete]);
+            
+            return (
+                <motion.div 
+                    className="fixed inset-0 bg-void flex flex-col items-center justify-center z-50"
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <div className="hex-pattern absolute inset-0"></div>
+                    <div className="noise-overlay"></div>
+                    
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="flex flex-col items-center"
+                    >
+                        <img 
+                            src="FNT512.png" 
+                            alt="FNT Logo" 
+                            className="w-24 h-24 mb-6"
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                            }}
+                        />
+                        
+                        <motion.h1 
+                            className="font-orbitron text-cyber-blue text-lg tracking-[0.3em] mb-4 glow-text-blue"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3, duration: 0.5 }}
+                        >
+                            Functional Neuro Training
+                        </motion.h1>
+                        
+                        <motion.h2 
+                            className="font-orbitron text-white text-2xl tracking-wider mb-8 glow-text-white"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.6, duration: 0.5 }}
+                        >
+                            FNT Neuro Card
+                        </motion.h2>
+                        
+                        <motion.div
+                            className="w-48 h-1 bg-gradient-to-r from-transparent via-cyber-blue to-transparent"
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            transition={{ delay: 0.9, duration: 0.8 }}
+                        />
+                        
+                        <motion.p 
+                            className="font-rajdhani text-gray-500 text-sm mt-8 tracking-wider"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1.2, duration: 0.5 }}
+                        >
+                            © 2025 Functional Neuro Training
+                        </motion.p>
+                    </motion.div>
+                </motion.div>
+            );
+        };
+        
+        // サイドメニュー
+        const SideMenu = ({ isOpen, onClose }) => {
+            return (
+                <AnimatePresence>
+                    {isOpen && (
+                        <>
+                            <motion.div
+                                className="fixed inset-0 bg-black/70 z-40"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={onClose}
+                            />
+                            <motion.div
+                                className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-deep-navy border-l border-cyber-blue/30 z-50 safe-area-top safe-area-bottom"
+                                initial={{ x: "100%" }}
+                                animate={{ x: 0 }}
+                                exit={{ x: "100%" }}
+                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                            >
+                                <div className="scrollable-panel h-full overflow-y-auto p-6">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="font-orbitron text-cyber-blue text-lg tracking-wider">INFO</h2>
+                                        <button 
+                                            onClick={onClose}
+                                            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                                        >
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="space-y-6 text-gray-300 font-rajdhani">
+                                        <section>
+                                            <h3 className="text-cyber-blue font-semibold mb-2 tracking-wider">神経科学的背景</h3>
+                                            <p className="text-sm leading-relaxed">
+                                                このトークテーマ・ルーレットは、予測不可能な刺激による<span className="text-cyber-blue">ドーパミン放出</span>を活用しています。
+                                                ランダムな報酬（テーマ）の出現は、脳の報酬系を活性化し、参加者の興味と注意を高めます。
+                                            </p>
+                                        </section>
+                                        
+                                        <section>
+                                            <h3 className="text-cyber-blue font-semibold mb-2 tracking-wider">使い方</h3>
+                                            <ol className="text-sm space-y-2 list-decimal list-inside">
+                                                <li>「Draw」ボタンをタップ</li>
+                                                <li>カードがめくれてテーマが表示</li>
+                                                <li>テーマについて話す</li>
+                                                <li>パスしたい場合は「Redraw」</li>
+                                            </ol>
+                                        </section>
+                                        
+                                        <section>
+                                            <h3 className="text-cyber-blue font-semibold mb-2 tracking-wider">カテゴリー</h3>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 rounded-full bg-cyber-blue"></span>
+                                                    <span>Neuro Geek - 神経科学トーク</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                                    <span>Life Shift - 生活・趣味</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 rounded-full bg-violet-500"></span>
+                                                    <span>Vision 2026 - 未来展望</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+                                                    <span>Ice Break - 打ち解けトーク</span>
+                                                </div>
+                                            </div>
+                                        </section>
+                                        
+                                        <section>
+                                            <h3 className="text-cyber-blue font-semibold mb-2 tracking-wider">社会的促進効果</h3>
+                                            <p className="text-sm leading-relaxed">
+                                                構造化されたトークテーマは<span className="text-cyber-blue">前頭前皮質</span>の負荷を軽減し、
+                                                参加者が自己開示しやすい環境を作ります。
+                                                カテゴリー分けにより、話題の深度と方向性が自然にコントロールされます。
+                                            </p>
+                                        </section>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
+            );
+        };
+        
+        // カード裏面
+        const CardBack = () => (
+            <div className="card-face card-back w-full h-full rounded-2xl bg-gradient-to-br from-deep-navy to-void border-2 border-cyber-blue/50 overflow-hidden">
+                <div className="absolute inset-0 circuit-pattern"></div>
+                <div className="scanline"></div>
+                <div className="noise-overlay"></div>
+                
+                <div className="relative w-full h-full flex flex-col items-center justify-center p-6">
+                    {/* 装飾的なコーナー */}
+                    <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-cyber-blue/70"></div>
+                    <div className="absolute top-3 right-3 w-8 h-8 border-r-2 border-t-2 border-cyber-blue/70"></div>
+                    <div className="absolute bottom-3 left-3 w-8 h-8 border-l-2 border-b-2 border-cyber-blue/70"></div>
+                    <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-cyber-blue/70"></div>
+                    
+                    {/* 中央のシンボル */}
+                    <div className="relative">
+                        <div className="w-20 h-20 rounded-full border-2 border-cyber-blue/50 flex items-center justify-center pulse-glow">
+                            <div className="w-12 h-12 rounded-full border border-cyber-blue/30 flex items-center justify-center">
+                                <span className="font-orbitron text-cyber-blue text-xl glow-text-blue">?</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h2 className="font-orbitron text-white text-lg mt-6 tracking-wider glow-text-white">FNT</h2>
+                    <p className="font-orbitron text-cyber-blue text-sm tracking-[0.2em] mt-1">NEURO CARD</p>
+                </div>
+            </div>
+        );
+        
+        // カード表面
+        const CardFront = ({ theme }) => (
+            <div className="card-face card-front w-full h-full rounded-2xl bg-gradient-to-br from-deep-navy to-void border-2 border-cyber-blue/50 overflow-hidden">
+                <div className="absolute inset-0 hex-pattern"></div>
+                <div className="noise-overlay"></div>
+                
+                <div className="relative w-full h-full flex flex-col items-center justify-center p-6">
+                    {/* 装飾的なコーナー */}
+                    <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-cyber-blue/70"></div>
+                    <div className="absolute top-3 right-3 w-8 h-8 border-r-2 border-t-2 border-cyber-blue/70"></div>
+                    <div className="absolute bottom-3 left-3 w-8 h-8 border-l-2 border-b-2 border-cyber-blue/70"></div>
+                    <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-cyber-blue/70"></div>
+                    
+                    {/* カテゴリーバッジ */}
+                    <div className={`px-4 py-1.5 rounded-full ${getCategoryStyle(theme?.category)} mb-6`}>
+                        <span className="font-orbitron text-white text-xs tracking-wider">{theme?.category}</span>
+                    </div>
+                    
+                    {/* テーマテキスト */}
+                    <div className="flex-1 flex items-center justify-center px-4">
+                        <p className="font-rajdhani text-white text-xl text-center leading-relaxed tracking-wide">
+                            {theme?.text}
+                        </p>
+                    </div>
+                    
+                    {/* 装飾ライン */}
+                    <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-cyber-blue to-transparent mt-4"></div>
+                </div>
+            </div>
+        );
+        
+        // メインアプリ
+        const App = () => {
+            const [showSplash, setShowSplash] = useState(true);
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const [isFlipped, setIsFlipped] = useState(false);
+            const [currentTheme, setCurrentTheme] = useState(null);
+            const [isAnimating, setIsAnimating] = useState(false);
+            const [usedThemes, setUsedThemes] = useState([]);
+            const audioContextRef = useRef(null);
+            
+            // オーディオコンテキスト初期化
+            const initAudio = () => {
+                if (!audioContextRef.current) {
+                    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioContextRef.current.state === 'suspended') {
+                    audioContextRef.current.resume();
+                }
+            };
+            
+            // ランダムテーマ取得
+            const getRandomTheme = () => {
+                let availableThemes = themes.filter((_, index) => !usedThemes.includes(index));
+                
+                if (availableThemes.length === 0) {
+                    setUsedThemes([]);
+                    availableThemes = themes;
+                }
+                
+                const randomIndex = Math.floor(Math.random() * availableThemes.length);
+                const selectedTheme = availableThemes[randomIndex];
+                const originalIndex = themes.indexOf(selectedTheme);
+                
+                setUsedThemes(prev => [...prev, originalIndex]);
+                return selectedTheme;
+            };
+            
+            // カードを引く
+            const drawCard = () => {
+                if (isAnimating) return;
+                
+                initAudio();
+                setIsAnimating(true);
+                
+                if (isFlipped) {
+                    // カードを裏返す
+                    setIsFlipped(false);
+                    setTimeout(() => {
+                        setCurrentTheme(getRandomTheme());
+                        setTimeout(() => {
+                            setIsFlipped(true);
+                            setIsAnimating(false);
+                        }, 300);
+                    }, 600);
+                } else {
+                    // 初回または新規ドロー
+                    setCurrentTheme(getRandomTheme());
+                    setTimeout(() => {
+                        setIsFlipped(true);
+                        setIsAnimating(false);
+                    }, 100);
+                }
+            };
+            
+            // PWA登録
+            useEffect(() => {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js').catch(err => {
+                        console.log('SW registration failed:', err);
+                    });
+                }
+            }, []);
+            
+            return (
+                <div className="w-full h-full bg-void overflow-hidden">
+                    <AnimatePresence>
+                        {showSplash && (
+                            <SplashScreen onComplete={() => setShowSplash(false)} />
+                        )}
+                    </AnimatePresence>
+                    
+                    {!showSplash && (
+                        <div className="w-full h-full flex flex-col safe-area-top safe-area-bottom">
+                            {/* ヘッダー */}
+                            <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-cyber-blue/20">
+                                <div className="flex items-center gap-3">
+                                    <img 
+                                        src="FNT512-transparent.png" 
+                                        alt="FNT" 
+                                        className="w-8 h-8"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                        }}
+                                    />
+                                    <h1 className="font-orbitron text-white text-base tracking-wider">
+                                        FNT <span className="text-cyber-blue">Neuro Card</span>
+                                    </h1>
+                                </div>
+                                <button 
+                                    onClick={() => setIsMenuOpen(true)}
+                                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-cyber-blue transition-colors"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                </button>
+                            </header>
+                            
+                            {/* 説明テキスト */}
+                            <div className="flex-shrink-0 px-4 py-3 text-center">
+                                <p className="font-rajdhani text-gray-400 text-sm leading-relaxed">
+                                    ランダム報酬による<span className="text-cyber-blue">ドーパミン放出</span>が<br/>
+                                    会話への興味と参加意欲を高めます
+                                </p>
+                            </div>
+                            
+                            {/* メインコンテンツ */}
+                            <main className="flex-1 flex flex-col items-center justify-center px-6 min-h-0">
+                                {/* カードエリア */}
+                                <div className="card-container w-full max-w-xs aspect-[3/4]">
+                                    <motion.div 
+                                        className="card-inner w-full h-full"
+                                        animate={{ rotateY: isFlipped ? 180 : 0 }}
+                                        transition={{ 
+                                            duration: 0.6, 
+                                            ease: [0.4, 0, 0.2, 1]
+                                        }}
+                                    >
+                                        <CardBack />
+                                        <CardFront theme={currentTheme} />
+                                    </motion.div>
+                                </div>
+                                
+                                {/* ボタンエリア */}
+                                <div className="flex gap-4 mt-8">
+                                    <motion.button
+                                        onClick={drawCard}
+                                        disabled={isAnimating}
+                                        className="px-8 py-3 rounded-lg bg-gradient-to-r from-cyber-blue to-cyber-blue-dark text-void font-orbitron text-sm tracking-wider glow-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        {isFlipped ? 'REDRAW' : 'DRAW'}
+                                    </motion.button>
+                                    
+                                    {isFlipped && (
+                                        <motion.button
+                                            onClick={() => {
+                                                setIsFlipped(false);
+                                                setCurrentTheme(null);
+                                            }}
+                                            className="px-6 py-3 rounded-lg border border-cyber-blue/50 text-cyber-blue font-orbitron text-sm tracking-wider hover:bg-cyber-blue/10 transition-colors"
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                        >
+                                            RESET
+                                        </motion.button>
+                                    )}
+                                </div>
+                                
+                                {/* 残りカード数表示 */}
+                                <p className="font-rajdhani text-gray-500 text-xs mt-4 tracking-wider">
+                                    {themes.length - usedThemes.length} / {themes.length} cards remaining
+                                </p>
+                            </main>
+                            
+                            {/* フッター */}
+                            <footer className="flex-shrink-0 py-3 text-center border-t border-cyber-blue/10">
+                                <p className="font-rajdhani text-gray-600 text-xs tracking-wider">
+                                    © 2025 Functional Neuro Training
+                                </p>
+                            </footer>
+                        </div>
+                    )}
+                    
+                    {/* サイドメニュー */}
+                    <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+                </div>
+            );
+        };
+        
+        // レンダリング
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
