@@ -1,0 +1,28 @@
+{
+    "name": "FNT Neuro Card",
+    "short_name": "Neuro Card",
+    "description": "FNT忘年会用トークテーマ・ルーレット - 神経科学×秘密結社",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "icons": [
+        {
+            "src": "FNT512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "FNT512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "categories": ["games", "entertainment"],
+    "lang": "ja",
+    "dir": "ltr"
+}
